@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pump Rules · Home</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bonheur+Royale&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+  html, body { margin: 0; padding: 0; background: #0A0A0A; font-family: 'Inter', system-ui; color: #FFF9F0; -webkit-font-smoothing: antialiased; }
+  body {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px 48px;
+    box-sizing: border-box;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 30%, rgba(233, 30, 99, 0.08) 0%, transparent 70%),
+      #0A0A0A;
+  }
+  #root { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .caption {
+    font-family: 'Inter', system-ui;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.24em; color: rgba(255, 224, 236, 0.5);
+    text-transform: uppercase;
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="home-screen.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "streak": 5,
+  "episodeTitle": "Welcome to SUR",
+  "showReunion": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === '__activate_edit_mode') setEditMode(true);
+      if (e.data.type === '__deactivate_edit_mode') setEditMode(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const setTweak = (k, v) => {
+    const next = { ...tweaks, [k]: v };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [k]: v } }, '*');
+  };
+
+  return (
+    <>
+      <div className="caption">Screen 1 · Home / Now Showing</div>
+      <IOSDevice width={375} height={812} dark>
+        <HomeScreen tweaks={tweaks} />
+      </IOSDevice>
+      <div className="caption" style={{ maxWidth: 375, textAlign: 'center', lineHeight: 1.6 }}>
+        Motion intent: hero card's pink glow pulses softly · gold foil corner shimmers on load · streak flame flickers · scroll reveals cards with slight lift · dogs blink every 6s
+      </div>
+
+      {editMode && <TweaksPanel tweaks={tweaks} setTweak={setTweak} />}
+    </>
+  );
+}
+
+function TweaksPanel({ tweaks, setTweak }) {
+  return (
+    <div style={{
+      position: 'fixed', right: 16, bottom: 16, zIndex: 9999,
+      width: 280, padding: 16, borderRadius: 14,
+      background: 'rgba(20, 10, 18, 0.96)',
+      border: '1.5px solid #D4AF37',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(233,30,99,0.3) inset',
+      backdropFilter: 'blur(16px)',
+      fontFamily: 'Inter, system-ui', color: '#FFF9F0',
+    }}>
+      <div style={{
+        fontFamily: '"Playfair Display", serif', fontStyle: 'italic',
+        fontWeight: 900, fontSize: 18, color: '#FFD700', marginBottom: 12,
+        letterSpacing: -0.2,
+      }}>Tweaks</div>
+
+      <label style={{ display: 'block', marginBottom: 12 }}>
+        <div style={{ fontSize: 10, letterSpacing: '0.14em', color: '#FFE0EC', fontWeight: 700, marginBottom: 4 }}>STREAK COUNT</div>
+        <input
+          type="range" min="0" max="30" value={tweaks.streak}
+          onChange={(e) => setTweak('streak', parseInt(e.target.value))}
+          style={{ width: '100%', accentColor: '#E91E63' }}
+        />
+        <div style={{ fontSize: 11, color: '#FFD700', fontWeight: 700, marginTop: 2 }}>{tweaks.streak} days</div>
+      </label>
+
+      <label style={{ display: 'block', marginBottom: 12 }}>
+        <div style={{ fontSize: 10, letterSpacing: '0.14em', color: '#FFE0EC', fontWeight: 700, marginBottom: 4 }}>EPISODE TITLE</div>
+        <input
+          type="text" value={tweaks.episodeTitle}
+          onChange={(e) => setTweak('episodeTitle', e.target.value)}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            padding: '6px 8px', borderRadius: 6,
+            border: '1px solid rgba(255,249,240,0.2)',
+            background: 'rgba(0,0,0,0.4)', color: '#FFF9F0',
+            fontFamily: 'Inter, system-ui', fontSize: 12,
+          }}
+        />
+      </label>
+
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+        <input
+          type="checkbox" checked={tweaks.showReunion}
+          onChange={(e) => setTweak('showReunion', e.target.checked)}
+          style={{ accentColor: '#E91E63' }}
+        />
+        <span style={{ fontSize: 12, color: '#FFF9F0' }}>Show locked Reunion card</span>
+      </label>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>

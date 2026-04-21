@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pump Rules · Series Finale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bonheur+Royale&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #050308; font-family: 'Inter', system-ui; color: #FFF9F0; -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px 48px; box-sizing: border-box; background: radial-gradient(ellipse 70% 50% at 50% 30%, rgba(255, 215, 0, 0.1) 0%, transparent 70%), #050308; }
+  #root { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .caption { font-family: 'Inter', system-ui; font-size: 10px; font-weight: 700; letter-spacing: 0.24em; color: rgba(255, 224, 236, 0.5); text-transform: uppercase; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="series-finale-screen.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect } = React;
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "score": 84,
+  "cutoff": 72,
+  "talentName": "Elizabeth"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [editMode, setEditMode] = useState(false);
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === '__activate_edit_mode') setEditMode(true);
+      if (e.data.type === '__deactivate_edit_mode') setEditMode(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+  return (
+    <>
+      <div className="caption">Screen 13 · Series Finale · You Passed</div>
+      <IOSDevice width={375} height={812} dark>
+        <SeriesFinaleScreen tweaks={tweaks} />
+      </IOSDevice>
+      <div className="caption" style={{ maxWidth: 375, textAlign: 'center', lineHeight: 1.6 }}>
+        Motion intent: confetti rains down continuously · marquee bulbs around ELIZABETH flicker alternating · score ring draws from 0 to 84 on mount · PASS stamp thuds down at full opacity · cast portraits stagger-rise into place · clapping emojis bounce out of phase · license "★" seal glints · Lisa's checkmark badge twinkles · big "Real Estate Agent" headline pulses with hot-pink/gold glow
+      </div>
+    </>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
